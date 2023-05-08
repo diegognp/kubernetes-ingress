@@ -81,6 +81,7 @@ type Server struct {
 	VSNamespace               string
 	VSName                    string
 	DisableIPV6               bool
+	Gunzip                    bool
 }
 
 // SSL defines SSL configuration for a server.

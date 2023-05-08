@@ -684,6 +684,7 @@ func (vsc *virtualServerConfigurator) GenerateVirtualServerConfig(
 		HTTPSnippets:  httpSnippets,
 		Server: version2.Server{
 			ServerName:                vsEx.VirtualServer.Spec.Host,
+			Gunzip:                    vsEx.VirtualServer.Spec.Gunzip,
 			StatusZone:                vsEx.VirtualServer.Spec.Host,
 			ProxyProtocol:             vsc.cfgParams.ProxyProtocol,
 			SSL:                       sslConfig,
@@ -1055,6 +1056,11 @@ func (p *policiesCfg) addEgressMTLSConfig(
 		}
 
 		trustedSecretPath = secretRef.Path
+	}
+
+	if len(trustedSecretPath) != 0 {
+		caFields := strings.Fields(trustedSecretPath)
+		trustedSecretPath = caFields[0]
 	}
 
 	p.EgressMTLS = &version2.EgressMTLS{
