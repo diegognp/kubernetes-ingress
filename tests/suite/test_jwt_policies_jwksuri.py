@@ -11,20 +11,14 @@ from suite.utils.vs_vsr_resources_utils import (
     delete_and_create_vs_from_yaml,
     delete_virtual_server,
     patch_v_s_route_from_yaml,
-<<<<<<< HEAD
     read_vs,
-=======
->>>>>>> main
 )
 
 std_vs_src = f"{TEST_DATA}/virtual-server/standard/virtual-server.yaml"
 jwt_pol_valid_src = f"{TEST_DATA}/jwt-policy-jwksuri/policies/jwt-policy-valid.yaml"
 jwt_pol_invalid_src = f"{TEST_DATA}/jwt-policy-jwksuri/policies/jwt-policy-invalid.yaml"
-<<<<<<< HEAD
 jwt_pol_invalid_content_cache_src = f"{TEST_DATA}/jwt-policy-jwksuri/policies/jwt-policy-invalid-content-cache-value.yaml"
 jwt_pol_content_cache_disabled_src = f"{TEST_DATA}/jwt-policy-jwksuri/policies/jwt-policy-content-cache-disabled.yaml"
-=======
->>>>>>> main
 jwt_vs_spec_src = f"{TEST_DATA}/jwt-policy-jwksuri/virtual-server/virtual-server-policy-spec.yaml"
 jwt_vs_route_src = f"{TEST_DATA}/jwt-policy-jwksuri/virtual-server/virtual-server-policy-route.yaml"
 jwt_spec_and_route_src = f"{TEST_DATA}/jwt-policy-jwksuri/virtual-server/virtual-server-policy-spec-and-route.yaml"
