@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"reflect"
 	"strings"
 
 	"github.com/nginxinc/kubernetes-ingress/pkg/apis/dos/v1beta1"
@@ -115,6 +116,7 @@ type Configurator struct {
 	cfgParams               *ConfigParams
 	templateExecutor        *version1.TemplateExecutor
 	templateExecutorV2      *version2.TemplateExecutor
+	HealthChecks            map[string]*api_v1.Probe
 	ingresses               map[string]*IngressEx
 	minions                 map[string]map[string]bool
 	virtualServers          map[string]*VirtualServerEx
@@ -166,6 +168,7 @@ func NewConfigurator(nginxManager nginx.Manager, staticCfgParams *StaticConfigPa
 		latencyCollector:        latencyCollector,
 		isLatencyMetricsEnabled: isLatencyMetricsEnabled,
 		isReloadsEnabled:        false,
+		HealthChecks:            make(map[string]*api_v1.Probe),
 	}
 	return &cnf
 }
@@ -911,8 +914,19 @@ func (cnf *Configurator) deleteTransportServer(key string) error {
 // UpdateEndpoints updates endpoints in NGINX configuration for the Ingress resources.
 func (cnf *Configurator) UpdateEndpoints(ingExes []*IngressEx) error {
 	reloadPlus := false
+	reloadForHealthChecks := false
 
 	for _, ingEx := range ingExes {
+
+		// Health checks are added as a location block for the server.
+		// If a health check is added, updated, or deleted, NGINX must reload to pick up these changes.
+		for k, v := range ingEx.HealthChecks {
+			data, exist := cnf.HealthChecks[ingEx.Ingress.Namespace+"-"+k]
+			if !exist || !reflect.DeepEqual(v, data) {
+				cnf.HealthChecks[ingEx.Ingress.Namespace+"-"+k] = v
+				reloadForHealthChecks = true
+			}
+		}
 		// It is safe to ignore warnings here as no new warnings should appear when updating Endpoints for Ingresses
 		_, err := cnf.addOrUpdateIngress(ingEx)
 		if err != nil {
@@ -928,7 +942,7 @@ func (cnf *Configurator) UpdateEndpoints(ingExes []*IngressEx) error {
 		}
 	}
 
-	if cnf.isPlus && !reloadPlus {
+	if cnf.isPlus && !reloadPlus && !reloadForHealthChecks {
 		glog.V(3).Info("No need to reload nginx")
 		return nil
 	}
@@ -943,8 +957,29 @@ func (cnf *Configurator) UpdateEndpoints(ingExes []*IngressEx) error {
 // UpdateEndpointsMergeableIngress updates endpoints in NGINX configuration for a mergeable Ingress resource.
 func (cnf *Configurator) UpdateEndpointsMergeableIngress(mergeableIngresses []*MergeableIngresses) error {
 	reloadPlus := false
+	reloadForHealthChecks := false
 
 	for i := range mergeableIngresses {
+
+		// Health checks are added as a location block for the server.
+		// If a health check is added, updated, or deleted, NGINX must reload to pick up these changes.
+		for k, v := range mergeableIngresses[i].Master.HealthChecks {
+			data, exist := cnf.HealthChecks[mergeableIngresses[i].Master.Ingress.Namespace+"-"+k]
+			if !exist || !reflect.DeepEqual(v, data) {
+				cnf.HealthChecks[mergeableIngresses[i].Master.Ingress.Namespace+"-"+k] = v
+				reloadForHealthChecks = true
+			}
+		}
+		for _, minion := range mergeableIngresses[i].Minions {
+			for k, v := range minion.HealthChecks {
+				data, exist := cnf.HealthChecks[minion.Ingress.Namespace+"-"+k]
+				if !exist || !reflect.DeepEqual(v, data) {
+					cnf.HealthChecks[minion.Ingress.Namespace+"-"+k] = v
+					reloadForHealthChecks = true
+				}
+			}
+		}
+
 		// It is safe to ignore warnings here as no new warnings should appear when updating Endpoints for Ingresses
 		_, err := cnf.addOrUpdateMergeableIngress(mergeableIngresses[i])
 		if err != nil {
@@ -962,7 +997,7 @@ func (cnf *Configurator) UpdateEndpointsMergeableIngress(mergeableIngresses []*M
 		}
 	}
 
-	if cnf.isPlus && !reloadPlus {
+	if cnf.isPlus && !reloadPlus && !reloadForHealthChecks {
 		glog.V(3).Info("No need to reload nginx")
 		return nil
 	}

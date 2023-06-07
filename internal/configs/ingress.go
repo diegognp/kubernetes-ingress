@@ -106,7 +106,9 @@ func generateNginxCfg(ingEx *IngressEx, apResources *AppProtectResources, dosRes
 
 		if cfgParams.HealthCheckEnabled {
 			if hc, exists := ingEx.HealthChecks[ingEx.Ingress.Spec.DefaultBackend.Service.Name+GetBackendPortAsString(ingEx.Ingress.Spec.DefaultBackend.Service.Port)]; exists {
-				healthChecks[name] = createHealthCheck(hc, name, &cfgParams)
+				if hc != nil {
+					healthChecks[name] = createHealthCheck(hc, name, &cfgParams)
+				}
 			}
 		}
 	}
@@ -221,7 +223,9 @@ func generateNginxCfg(ingEx *IngressEx, apResources *AppProtectResources, dosRes
 
 			if cfgParams.HealthCheckEnabled {
 				if hc, exists := ingEx.HealthChecks[path.Backend.Service.Name+GetBackendPortAsString(path.Backend.Service.Port)]; exists {
-					healthChecks[upsName] = createHealthCheck(hc, upsName, &cfgParams)
+					if hc != nil {
+						healthChecks[upsName] = createHealthCheck(hc, upsName, &cfgParams)
+					}
 				}
 			}
 
@@ -269,7 +273,9 @@ func generateNginxCfg(ingEx *IngressEx, apResources *AppProtectResources, dosRes
 
 			if cfgParams.HealthCheckEnabled {
 				if hc, exists := ingEx.HealthChecks[ingEx.Ingress.Spec.DefaultBackend.Service.Name+GetBackendPortAsString(ingEx.Ingress.Spec.DefaultBackend.Service.Port)]; exists {
-					healthChecks[upsName] = createHealthCheck(hc, upsName, &cfgParams)
+					if hc != nil {
+						healthChecks[upsName] = createHealthCheck(hc, upsName, &cfgParams)
+					}
 				}
 			}
 
@@ -458,7 +464,9 @@ func createLocation(path string, upstream version1.Upstream, cfg *ConfigParams, 
 func upstreamRequiresQueue(name string, ingEx *IngressEx, cfg *ConfigParams) (n int64, timeout int64) {
 	if cfg.HealthCheckEnabled && cfg.HealthCheckMandatory && cfg.HealthCheckMandatoryQueue > 0 {
 		if hc, exists := ingEx.HealthChecks[name]; exists {
-			return cfg.HealthCheckMandatoryQueue, int64(hc.TimeoutSeconds)
+			if hc != nil {
+				return cfg.HealthCheckMandatoryQueue, int64(hc.TimeoutSeconds)
+			}
 		}
 	}
 	return 0, 0

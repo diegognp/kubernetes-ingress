@@ -2805,9 +2805,7 @@ func (lbc *LoadBalancerController) createIngressEx(ing *networking.Ingress, vali
 
 		if lbc.isNginxPlus && lbc.isHealthCheckEnabled(ing) {
 			healthCheck := lbc.getHealthChecksForIngressBackend(ing.Spec.DefaultBackend, ing.Namespace)
-			if healthCheck != nil {
-				ingEx.HealthChecks[ing.Spec.DefaultBackend.Service.Name+configs.GetBackendPortAsString(ing.Spec.DefaultBackend.Service.Port)] = healthCheck
-			}
+			ingEx.HealthChecks[ing.Spec.DefaultBackend.Service.Name+configs.GetBackendPortAsString(ing.Spec.DefaultBackend.Service.Port)] = healthCheck
 		}
 
 		if (lbc.isNginxPlus && lbc.isPrometheusEnabled) || lbc.isLatencyMetricsEnabled {
@@ -2861,9 +2859,7 @@ func (lbc *LoadBalancerController) createIngressEx(ing *networking.Ingress, vali
 			// Pull active health checks from k8 api
 			if lbc.isNginxPlus && lbc.isHealthCheckEnabled(ing) {
 				healthCheck := lbc.getHealthChecksForIngressBackend(&path.Backend, ing.Namespace)
-				if healthCheck != nil {
-					ingEx.HealthChecks[path.Backend.Service.Name+configs.GetBackendPortAsString(path.Backend.Service.Port)] = healthCheck
-				}
+				ingEx.HealthChecks[path.Backend.Service.Name+configs.GetBackendPortAsString(path.Backend.Service.Port)] = healthCheck
 			}
 
 			if lbc.isNginxPlus || lbc.isLatencyMetricsEnabled {
@@ -3671,20 +3667,29 @@ func (lbc *LoadBalancerController) getHealthChecksForIngressBackend(backend *net
 }
 
 func findProbeForPods(pods []*api_v1.Pod, svcPort *api_v1.ServicePort) *api_v1.Probe {
+	var probe *api_v1.Probe
+	var lastTime *meta_v1.Time
 	if len(pods) > 0 {
-		pod := pods[0]
-		for _, container := range pod.Spec.Containers {
-			for _, port := range container.Ports {
-				if compareContainerPortAndServicePort(port, *svcPort) {
-					// only http ReadinessProbes are useful for us
-					if container.ReadinessProbe != nil && container.ReadinessProbe.ProbeHandler.HTTPGet != nil && container.ReadinessProbe.PeriodSeconds > 0 {
-						return container.ReadinessProbe
+		for _, pod := range pods {
+			if lastTime == nil || pod.CreationTimestamp.Time.After(lastTime.Time) {
+				lastTime = &pod.CreationTimestamp
+				for _, container := range pod.Spec.Containers {
+					for _, port := range container.Ports {
+						if compareContainerPortAndServicePort(port, *svcPort) {
+							// only http ReadinessProbes are useful for us
+							if container.ReadinessProbe != nil && container.ReadinessProbe.ProbeHandler.HTTPGet != nil && container.ReadinessProbe.PeriodSeconds > 0 {
+								probe = container.ReadinessProbe
+							} else {
+								probe = nil
+							}
+						}
 					}
 				}
 			}
 		}
+
 	}
-	return nil
+	return probe
 }
 
 func compareContainerPortAndServicePort(containerPort api_v1.ContainerPort, svcPort api_v1.ServicePort) bool {
