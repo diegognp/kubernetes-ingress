@@ -72,7 +72,7 @@ For example, in my lab I ran the following to inject my `helm` release named `ki
  kubectl get deploy -n nginx-ingress kic01-nginx-ingress-controller -oyaml | linkerd inject - | kubectl apply -f -
  ```
 
-If we do a `kubectl get pods -n nginx-ingress` on the NGINX Ingress controller, we can see we now have `2/2` pods ready. That confirms that the `Linkerd` sidecar has been successfully injected into NGINX Ingress controller.
+If we do a `kubectl get pods -n nginx-ingress` on the NGINX Ingress controller, we can see we now have `2/2` pods ready, confirming that we have successfully injected the `Linkerd` sidecar into NGINX Ingress controler.
 
 ```bash
 kubectl get po -n nginx-ingress kic01-nginx-ingress-controller-5f8c9b586d-ng4r8
