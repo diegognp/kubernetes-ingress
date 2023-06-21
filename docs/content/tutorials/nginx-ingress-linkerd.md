@@ -18,7 +18,7 @@ We need to install the `Linkerd` control plane utility.
 Linkerd has a great document on how to install the linkerd control plane utility on their website.
 You can find the install steps on `Linkerd` website: [Linkerd Service mesh](https://linkerd.io/2.13/getting-started/)
 
-Once you have the `Linkerd` control plane utility installed, you will need to inject the NGINX Ingress controller deployment and your application with the `Linkerd` sidecar.
+Once you have the `Linkerd` control plane utility installed, inject the NGINX Ingress controller deployment and your application with the `Linkerd` sidecar.
 
 We are going to use the NGINX Ingress controller custom resource definitions (CRDs) and take advantage of the advanced capabilites they provide.
 
@@ -41,9 +41,11 @@ kubectl get deployment -n nginx-ingress nginx-ingress -oyaml | linkerd inject - 
 In the above example, my `NGINX Ingress controller` deployment is in the `nginx-ingress` namespace. Adjust accordingly to your environment.
 
 
-If you are using `Helm`, you can inject the sidecar in two ways.
+If you are using `Helm`, you have two options on how to inject the Linkerd sidecar.
 
-1. You can annotation your `Helm` depoloyment with the following annotation:
+Option 1.
+
+You can annotation your `Helm` depoloyment with the following annotation:
 
 ```yaml
 controller:
@@ -54,8 +56,9 @@ controller:
 
 This annotation will tell `Linkerd` to automatically inject the sidecar during the install of NGINX Ingress controller using `helm`.
 
+Option 2.
 
-2. Inject the linkerd sidecar to an exisiting `helm` install
+Inject the linkerd sidecar to an exisiting `helm` deployment.
 
 If you have an exisiting `Helm` install and want to inject the exisiting install, you can run the following:
 
