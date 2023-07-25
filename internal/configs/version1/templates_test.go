@@ -443,6 +443,7 @@ var (
 		VariablesHashBucketSize: 256,
 		VariablesHashMaxSize:    1024,
 		TLSPassthrough:          true,
+		TLSPassthroughPort:      8443,
 	}
 )
 
