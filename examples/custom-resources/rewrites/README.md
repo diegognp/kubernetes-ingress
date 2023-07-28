@@ -68,7 +68,7 @@ spec:
     service: tea-svc
     port: 80
   routes:
-  - path: ~ /tea/?(.*)
+  - path: /tea/?(.*)
     action:
       proxy:
         upstream: tea
